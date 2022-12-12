@@ -17,47 +17,47 @@ from ihcsdk.ihccontroller import IHCController
 resource_map = {}
 wireless_serial_map = {}
 
-def receive_line_event(resource_id, value):
-    print (f"{datetime.now()} Event received for {resource_map[resource_id]}[{resource_id}]: {value}")
 
+def receive_line_event(resource_id, value):
+    print(f"{datetime.now()} Event received for {resource_map[resource_id]}[{resource_id}]: {value}")
 
 
 button_events = {}
+
+
 def receive_airlink_event(resource_id, value):
     if not resource_id in button_events:
         # First event. This usually happens when the event is initially subscribed to.
         name = f"{resource_map[resource_id]}[{resource_id}]"
         button_events[resource_id] = ButtonEventTracker(resource_id, name, value)
     else:
-        button_events[resource_id].RegisterEvent(value)
+        button_events[resource_id].register_event(value)
 
-def to_int_id(idStr):
-    return int(idStr.strip("_"), 0)
+
+def to_int_id(id_str):
+    return int(id_str.strip("_"), 0)
+
 
 def get_int_id(name, node):
-    id = to_int_id(node.get("id"))
-    resource_map[id] = name
-    return id
-
-def foo():
-    return input()
+    id_int = to_int_id(node.get("id"))
+    resource_map[id_int] = name
+    return id_int
 
 def main():
     """Do the test"""
 
-    starttime = datetime.now()
+    start_time = datetime.now()
 
     def on_ihc_change(ihcid, value):
         """Callback when ihc resource changes"""
         print(
-            "Resource change " + str(ihcid) + "->" + str(value) + " time: " + gettime()
+            "Resource change " + str(ihcid) + "->" + str(value) + " time: " + get_time()
         )
 
-    def gettime():
-        dif = datetime.now() - starttime
+    def get_time():
+        dif = datetime.now() - start_time
         return str(dif)
 
-    
     cmdline = open(".parameters", "rt").read()
     args = cmdline.split(" ")
     if len(args) < 4:
@@ -99,44 +99,40 @@ def main():
     groups = project.findall(".//group")
     for group in groups:
         group_name = group.attrib["name"]
-        print (group_name)
-        print ("    --- data lines ---")
-        product_datalines = group.findall('.//product_dataline')        
+        print(group_name)
+        print("    --- data lines ---")
+        product_datalines = group.findall('.//product_dataline')
         for dataline in product_datalines:
             id = dataline.attrib["id"]
             name = dataline.attrib["name"]
             position = dataline.attrib["position"]
             product_identifier = dataline.attrib["product_identifier"]
-            print (f"    {name} @ {position} [{product_identifier}:{id}]")
-            ihc.add_notify_event( get_int_id(f"Dataline {name}", dataline), receive_line_event, True)
+            print(f"    {name} @ {position} [{product_identifier}:{id}]")
+            ihc.add_notify_event(get_int_id(f"Dataline {name}", dataline), receive_line_event, True)
 
-#            for dataline_output in dataline.findall("dataline_output"):
-#                ihc.add_notify_event(get_int_id(f"Dataline out {name}", dataline_output), receive_line_event, True)
+            for dataline_output in dataline.findall("dataline_output"):
+                ihc.add_notify_event(get_int_id(f"Dataline out {name}", dataline_output), receive_line_event, True)
 
-        print ("    --- air links ---")
-        product_airlinks = group.findall('.//product_airlink')        
+        print("    --- air links ---")
+        product_airlinks = group.findall('.//product_airlink')
         for airlink in product_airlinks:
             id = airlink.attrib["id"]
             name = airlink.attrib["name"]
             position = airlink.attrib["position"]
             product_identifier = airlink.attrib["product_identifier"]
             device_type = airlink.attrib["device_type"]
-            serial = int(airlink.get("serialnumber").strip("_"), 0) # _0x640208193098
+            serial = int(airlink.get("serialnumber").strip("_"), 0)  # _0x640208193098
             full_name = f"{name} @ {group_name}:{position}"
             wireless_serial_map[serial] = full_name
-            print (f"    {full_name} [{product_identifier}:{device_type}:{id}]. Serial {serial}")
+            print(f"    {full_name} [{product_identifier}:{device_type}:{id}]. Serial {serial}")
 
-#            if (serial == 109959888580760):
-            ihc.add_notify_event( get_int_id(f"Airlink {name}", airlink), receive_line_event, True)
-            
+            ihc.add_notify_event(get_int_id(f"Airlink {name}", airlink), receive_line_event, True)
 
             airlink_inputs = airlink.findall(".//airlink_input")
-            for input in airlink_inputs:
-                input_name = input.get("name")
-                print (f"    {input_name} - {input.get('name')} - {input.get('id')}")
-                #if (serial == 109959888580760):
-                ihc.add_notify_event(get_int_id(f"Airlink in {name} {input_name}", input), receive_airlink_event, True)
-            
+            for airlink_input in airlink_inputs:
+                input_name = airlink_input.get("name")
+                print(f"    {input_name} - {airlink_input.get('name')} - {airlink_input.get('id')}")
+                ihc.add_notify_event(get_int_id(f"Airlink in {name} {input_name}", airlink_input), receive_airlink_event, True)
 
     # print ("------ DEVICES -----")
     # devices = ihc.get_detected_devices()
@@ -151,32 +147,32 @@ def main():
     #     else:
     #         name = "<unknown>"
 
-#        print (f"Wireless {name} - {serial} - Detected: {detected}, Battery {battery}, Signal {signal}")
+    #        print (f"Wireless {name} - {serial} - Detected: {detected}, Battery {battery}, Signal {signal}")
 
-# <ns1:getDetectedDeviceList1>
-# <ns1:arrayItem xsi:type="ns1:WSRFDevice">
-# <ns1:batteryLevel xsi:type="xsd:int">1</ns1:batteryLevel>
-# <ns1:deviceType xsi:type="xsd:int">2062</ns1:deviceType>
-# <ns1:serialNumber xsi:type="xsd:long">110011428841875</ns1:serialNumber>
-# <ns1:version xsi:type="xsd:int">1</ns1:version>
-# <ns1:detected xsi:type="xsd:boolean">true</ns1:detected>
-# <ns1:signalStrength xsi:type="xsd:int">25</ns1:signalStrength>
-# </ns1:arrayItem>
+    # <ns1:getDetectedDeviceList1>
+    # <ns1:arrayItem xsi:type="ns1:WSRFDevice">
+    # <ns1:batteryLevel xsi:type="xsd:int">1</ns1:batteryLevel>
+    # <ns1:deviceType xsi:type="xsd:int">2062</ns1:deviceType>
+    # <ns1:serialNumber xsi:type="xsd:long">110011428841875</ns1:serialNumber>
+    # <ns1:version xsi:type="xsd:int">1</ns1:version>
+    # <ns1:detected xsi:type="xsd:boolean">true</ns1:detected>
+    # <ns1:signalStrength xsi:type="xsd:int">25</ns1:signalStrength>
+    # </ns1:arrayItem>
 
-    print ("Waiting - press 'q' to quit")
+    print("Waiting - press 'q' to quit")
 
     while True:
-        user_input = foo()
+        user_input = input()
         if user_input == 'q':
             break
 
     ihc.disconnect()
     ihc.client.connection.session.close()
 
-    print ("Done")
+    print("Done")
+
 
 main()
-
 
 #    def get_detected_devices(self):
 #        conn = self.client.connection
@@ -184,9 +180,8 @@ main()
 #        ws_method = 'getDetectedDeviceList'
 #        xdoc = conn.soap_action(ws_service, ws_method, "")
 #        return xdoc
-        # if xdoc is not False:
-        #     return xdoc.find(
-        #         "./SOAP-ENV:Body/ns1:getState1/ns1:state", IHCSoapClient.ihcns
-        #     ).text
-        # return False
-
+# if xdoc is not False:
+#     return xdoc.find(
+#         "./SOAP-ENV:Body/ns1:getState1/ns1:state", IHCSoapClient.ihcns
+#     ).text
+# return False
